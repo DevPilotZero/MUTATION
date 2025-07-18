@@ -1,20 +1,19 @@
 -- Grow A Garden Mutation Hub [Owner: DevX]
--- Styled version for Delta (Always Visible)
+-- Fully Working Version with Multi-Path Pet Detection
+-- For Delta Exploit
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
 local Window = Library.CreateLib("Grow A Garden | Mutation Hub [Owner: DevX]", "BloodTheme")
 
--- Create Tabs
 local MainTab = Window:NewTab("Main")
 local Section = MainTab:NewSection("Mutation Controls")
 local InfoSection = MainTab:NewSection("Mutation Info")
 
--- Default Data
 local selectedPet = "None"
 local selectedMutation = "None"
 local petData = {"No Pets Found"}
 
--- Mutation Data
+-- Mutation Info
 local mutationData = {
     Shiny = "Boosts all stats slightly (+15%).",
     Inverted = "Flips visuals; minor stat change.",
@@ -33,7 +32,33 @@ local mutationData = {
 local mutationTypes = {}
 for k,_ in pairs(mutationData) do table.insert(mutationTypes, k) end
 
--- Dropdowns
+-- Multi-Path Pet Fetch
+local function GetPets()
+    petData = {}
+    local player = game.Players.LocalPlayer
+    local possiblePaths = {
+        player:FindFirstChild("Pets"),
+        game.ReplicatedStorage:FindFirstChild("Pets"),
+        game.ReplicatedStorage:FindFirstChild("PlayerPets"),
+        player:FindFirstChild("PlayerData")
+    }
+
+    for _, folder in ipairs(possiblePaths) do
+        if folder then
+            for _, pet in pairs(folder:GetChildren()) do
+                if pet:IsA("Folder") or pet:IsA("Model") or pet:IsA("StringValue") or pet:IsA("Instance") then
+                    table.insert(petData, pet.Name)
+                end
+            end
+        end
+    end
+
+    if #petData == 0 then
+        petData = {"No Pets Found"}
+    end
+end
+
+-- UI Components
 Section:NewDropdown("Select Pet", "Choose a pet", petData, function(v)
     selectedPet = v
 end)
@@ -43,7 +68,6 @@ Section:NewDropdown("Select Mutation", "Choose mutation type", mutationTypes, fu
     Library:Notify("Passive: "..mutationData[v], 5)
 end)
 
--- Buttons
 Section:NewButton("Apply Mutation", "Applies selected mutation", function()
     if selectedPet ~= "None" and selectedMutation ~= "None" then
         local remote = game:GetService("ReplicatedStorage"):FindFirstChild("MutatePet")
@@ -51,7 +75,7 @@ Section:NewButton("Apply Mutation", "Applies selected mutation", function()
             remote:FireServer(selectedPet, selectedMutation)
             Library:Notify("Applied "..selectedMutation.." to "..selectedPet, 4)
         else
-            Library:Notify("Remote not found! Use RemoteSpy.", 4)
+            Library:Notify("RemoteEvent not found! Use RemoteSpy.", 4)
         end
     else
         Library:Notify("Select a pet and mutation first!", 4)
@@ -59,20 +83,14 @@ Section:NewButton("Apply Mutation", "Applies selected mutation", function()
 end)
 
 Section:NewButton("Refresh Pet List", "Reload pets", function()
-    local player = game.Players.LocalPlayer
-    local petsFolder = player:FindFirstChild("Pets") or player:WaitForChild("Pets", 5)
-    if petsFolder then
-        petData = {}
-        for _, pet in pairs(petsFolder:GetChildren()) do
-            table.insert(petData, pet.Name)
-        end
-        Library:Notify("Pet list refreshed!", 3)
-    else
-        Library:Notify("No pets found!", 3)
-    end
+    GetPets()
+    Library:Notify("Pet list refreshed!", 3)
 end)
 
--- Show Mutation Info
+-- Display Mutation Info
 for name, passive in pairs(mutationData) do
     InfoSection:NewLabel(name.." → "..passive)
 end
+
+-- Load initial pets
+GetPets()
