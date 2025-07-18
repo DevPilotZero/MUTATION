@@ -1,16 +1,16 @@
--- Grow a Garden | Pet Mutation GUI (Delta Compatible)
--- Made by ChatGPT - Fully Mobile Friendly
+-- Grow a Garden Mutation GUI | Owner: DevX
+-- Made by ChatGPT for DevX
 
--- Load Kavo UI (Mobile Friendly)
+-- Load Kavo UI
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Grow A Garden | Mutation Hub", "DarkTheme")
+local Window = Library.CreateLib("Grow A Garden | Mutation Hub [Owner: DevX]", "DarkTheme")
 
 -- Variables
 local selectedPet = nil
 local selectedMutation = nil
 local petData = {}
 
--- Function to Get Player's Pets
+-- Function to Get Pets
 local function GetPets()
     petData = {}
     local player = game.Players.LocalPlayer
@@ -28,38 +28,39 @@ local mutationData = {
     Frozen = "Adds freeze effect; slows enemies.",
     Windy = "Boosts speed/agility.",
     Golden = "Boosts value and luck (+30%).",
-    Mega = "Massive stats boost; increases size.",
+    Mega = "Massive stat boost; increases size.",
     Tiny = "Shrinks size; boosts speed & luck.",
     IronSkin = "Boosts defense and durability.",
     Radiant = "Balanced boost; glowing effect.",
-    Rainbow = "Rare: boosts all stats.",
+    Rainbow = "Rare multi-stat boost.",
     Shocked = "Electric aura; boosts attack.",
     Ascended = "Ultimate boost (+100%); rare."
 }
 
 local mutationTypes = {}
-for k,_ in pairs(mutationData) do table.insert(mutationTypes, k) end
+for k,_ in pairs(mutationData) do
+    table.insert(mutationTypes, k)
+end
 
--- GUI Tabs
+-- GUI Tab
 local Tab = Window:NewTab("Mutations")
-local Section = Tab:NewSection("Pet Mutation")
+local Section = Tab:NewSection("Pet Mutation Controls")
 
--- Dropdown for Pets
+-- Dropdown: Select Pet
 Section:NewDropdown("Select Pet", "Choose your pet", petData, function(v)
     selectedPet = v
 end)
 
--- Dropdown for Mutation
+-- Dropdown: Select Mutation
 Section:NewDropdown("Select Mutation", "Choose mutation type", mutationTypes, function(v)
     selectedMutation = v
-    Library:Notify(v.." Passive: "..mutationData[v], 5)
+    Library:Notify("Passive: "..mutationData[v], 5)
 end)
 
--- Apply Button
+-- Apply Mutation Button
 Section:NewButton("Apply Mutation", "Apply selected mutation", function()
     if selectedPet and selectedMutation then
-        -- ✅ Replace with actual RemoteEvent name from RemoteSpy
-        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("MutatePet")
+        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("MutatePet") -- Replace if needed
         if remote then
             local args = {
                 [1] = selectedPet,
@@ -68,15 +69,15 @@ Section:NewButton("Apply Mutation", "Apply selected mutation", function()
             remote:FireServer(unpack(args))
             Library:Notify("Applied "..selectedMutation.." to "..selectedPet, 4)
         else
-            Library:Notify("RemoteEvent not found! Update script.", 4)
+            Library:Notify("RemoteEvent not found! Use RemoteSpy.", 4)
         end
     else
-        Library:Notify("Select a pet and mutation first!", 4)
+        Library:Notify("Please select a pet and mutation first!", 4)
     end
 end)
 
--- Refresh Button for New Pets
-Section:NewButton("Refresh Pet List", "Updates pet list", function()
+-- Refresh Pet List Button
+Section:NewButton("Refresh Pet List", "Updates your pet list", function()
     GetPets()
     Library:Notify("Pet list refreshed!", 3)
 end)
