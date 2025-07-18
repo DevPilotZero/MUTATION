@@ -1,22 +1,16 @@
--- Grow a Garden | Pet Mutation GUI (With Passives)
--- Made by ChatGPT
+-- Grow a Garden | Pet Mutation GUI (Delta Compatible)
+-- Made by ChatGPT - Fully Mobile Friendly
 
--- Load Orion UI Library
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+-- Load Kavo UI (Mobile Friendly)
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Grow A Garden | Mutation Hub", "DarkTheme")
 
-local Window = OrionLib:MakeWindow({
-    Name = "Grow A Garden | Mutation Hub",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "GrowGardenMutate"
-})
-
+-- Variables
 local selectedPet = nil
 local selectedMutation = nil
-local mutationDescription = "Select a mutation to see its passive effect."
 local petData = {}
 
--- Function to Get Player's Pets (Adjust if game uses different structure)
+-- Function to Get Player's Pets
 local function GetPets()
     petData = {}
     local player = game.Players.LocalPlayer
@@ -27,101 +21,62 @@ local function GetPets()
 end
 GetPets()
 
--- ✅ Mutation List with Passives
+-- Mutation List with Passives
 local mutationData = {
     Shiny = "Boosts all stats slightly (+15%).",
-    Inverted = "Flips pet visuals; minor stat change.",
+    Inverted = "Flips visuals; minor stat change.",
     Frozen = "Adds freeze effect; slows enemies.",
-    Windy = "Boosts speed/agility stats.",
-    Golden = "Huge boost to value and drop luck (+30%).",
-    Mega = "Massive stat boost; increases size.",
-    Tiny = "Shrinks size; boosts speed and luck.",
-    IronSkin = "Increases defense and durability.",
-    Radiant = "Balanced boost; adds glowing effect.",
-    Rainbow = "Rare multi-boost to all stats.",
-    Shocked = "Adds electric aura; boosts attack.",
-    Ascended = "Ultimate boost (+100%); rare mutation."
+    Windy = "Boosts speed/agility.",
+    Golden = "Boosts value and luck (+30%).",
+    Mega = "Massive stats boost; increases size.",
+    Tiny = "Shrinks size; boosts speed & luck.",
+    IronSkin = "Boosts defense and durability.",
+    Radiant = "Balanced boost; glowing effect.",
+    Rainbow = "Rare: boosts all stats.",
+    Shocked = "Electric aura; boosts attack.",
+    Ascended = "Ultimate boost (+100%); rare."
 }
 
--- ✅ Convert Keys to Array for Dropdown
 local mutationTypes = {}
-for mutationName, _ in pairs(mutationData) do
-    table.insert(mutationTypes, mutationName)
-end
+for k,_ in pairs(mutationData) do table.insert(mutationTypes, k) end
 
--- Create Tab
-local Tab = Window:MakeTab({
-    Name = "Pet Mutation",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
+-- GUI Tabs
+local Tab = Window:NewTab("Mutations")
+local Section = Tab:NewSection("Pet Mutation")
 
--- Dropdown for Pet Selection
-Tab:AddDropdown({
-    Name = "Select Pet",
-    Default = "",
-    Options = petData,
-    Callback = function(Value)
-        selectedPet = Value
-    end
-})
+-- Dropdown for Pets
+Section:NewDropdown("Select Pet", "Choose your pet", petData, function(v)
+    selectedPet = v
+end)
 
--- Dropdown for Mutation Type
-Tab:AddDropdown({
-    Name = "Select Mutation",
-    Default = "",
-    Options = mutationTypes,
-    Callback = function(Value)
-        selectedMutation = Value
-        mutationDescription = mutationData[Value] or "No description available."
-        OrionLib:MakeNotification({
-            Name = "Mutation Info",
-            Content = Value.." - "..mutationDescription,
-            Image = "rbxassetid://4483345998",
-            Time = 4
-        })
-    end
-})
+-- Dropdown for Mutation
+Section:NewDropdown("Select Mutation", "Choose mutation type", mutationTypes, function(v)
+    selectedMutation = v
+    Library:Notify(v.." Passive: "..mutationData[v], 5)
+end)
 
--- Label for Passive Effect (Updates Dynamically)
-Tab:AddLabel("Passive Effect: Select a mutation.")
-
--- Button to Apply Mutation
-Tab:AddButton({
-    Name = "Apply Mutation",
-    Callback = function()
-        if selectedPet and selectedMutation then
-            -- ✅ Replace this with actual RemoteEvent
-            local remote = game:GetService("ReplicatedStorage"):FindFirstChild("MutatePet") 
-            if remote then
-                local args = {
-                    [1] = selectedPet,
-                    [2] = selectedMutation
-                }
-                remote:FireServer(unpack(args))
-                OrionLib:MakeNotification({
-                    Name = "Success",
-                    Content = "Applied "..selectedMutation.." to "..selectedPet,
-                    Image = "rbxassetid://4483345998",
-                    Time = 3
-                })
-            else
-                OrionLib:MakeNotification({
-                    Name = "Error",
-                    Content = "RemoteEvent not found! Update script.",
-                    Image = "rbxassetid://4483345998",
-                    Time = 3
-                })
-            end
+-- Apply Button
+Section:NewButton("Apply Mutation", "Apply selected mutation", function()
+    if selectedPet and selectedMutation then
+        -- ✅ Replace with actual RemoteEvent name from RemoteSpy
+        local remote = game:GetService("ReplicatedStorage"):FindFirstChild("MutatePet")
+        if remote then
+            local args = {
+                [1] = selectedPet,
+                [2] = selectedMutation
+            }
+            remote:FireServer(unpack(args))
+            Library:Notify("Applied "..selectedMutation.." to "..selectedPet, 4)
         else
-            OrionLib:MakeNotification({
-                Name = "Error",
-                Content = "Select a pet and mutation first!",
-                Image = "rbxassetid://4483345998",
-                Time = 3
-            })
+            Library:Notify("RemoteEvent not found! Update script.", 4)
         end
+    else
+        Library:Notify("Select a pet and mutation first!", 4)
     end
-})
+end)
 
-OrionLib:Init()
+-- Refresh Button for New Pets
+Section:NewButton("Refresh Pet List", "Updates pet list", function()
+    GetPets()
+    Library:Notify("Pet list refreshed!", 3)
+end)
