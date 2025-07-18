@@ -1,19 +1,20 @@
--- Grow A Garden Mutation Hub [Owner: DevX]
--- Fully Working Version with Multi-Path Pet Detection
--- For Delta Exploit
+-- Grow A Garden | Mutation Hub V2
+-- Designed by DevX | Fully Functional
+-- Delta-Compatible GUI
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Grow A Garden | Mutation Hub [Owner: DevX]", "BloodTheme")
+local Window = Library.CreateLib("Grow A Garden | Mutation Hub [Design by DevX]", "BloodTheme")
 
+-- Tabs
 local MainTab = Window:NewTab("Main")
 local Section = MainTab:NewSection("Mutation Controls")
 local InfoSection = MainTab:NewSection("Mutation Info")
 
-local selectedPet = "None"
-local selectedMutation = "None"
-local petData = {"No Pets Found"}
+local selectedPet = nil
+local selectedMutation = nil
+local petData = {"Click Refresh!"}
 
--- Mutation Info
+-- Mutation Info Table
 local mutationData = {
     Shiny = "Boosts all stats slightly (+15%).",
     Inverted = "Flips visuals; minor stat change.",
@@ -30,11 +31,23 @@ local mutationData = {
 }
 
 local mutationTypes = {}
-for k,_ in pairs(mutationData) do table.insert(mutationTypes, k) end
+for name,_ in pairs(mutationData) do
+    table.insert(mutationTypes, name)
+end
 
--- Multi-Path Pet Fetch
+-- Dropdowns (Dynamic)
+local petDropdown = Section:NewDropdown("Select Pet", "Choose a pet", petData, function(value)
+    selectedPet = value
+end)
+
+local mutationDropdown = Section:NewDropdown("Select Mutation", "Choose mutation type", mutationTypes, function(value)
+    selectedMutation = value
+    Library:Notify("Passive: "..mutationData[value], 5)
+end)
+
+-- Fetch Pets Function
 local function GetPets()
-    petData = {}
+    local newPets = {}
     local player = game.Players.LocalPlayer
     local possiblePaths = {
         player:FindFirstChild("Pets"),
@@ -47,29 +60,28 @@ local function GetPets()
         if folder then
             for _, pet in pairs(folder:GetChildren()) do
                 if pet:IsA("Folder") or pet:IsA("Model") or pet:IsA("StringValue") or pet:IsA("Instance") then
-                    table.insert(petData, pet.Name)
+                    table.insert(newPets, pet.Name)
                 end
             end
         end
     end
 
-    if #petData == 0 then
-        petData = {"No Pets Found"}
+    if #newPets == 0 then
+        newPets = {"No Pets Found"}
     end
+
+    petData = newPets
+    petDropdown:Refresh(petData)
 end
 
--- UI Components
-Section:NewDropdown("Select Pet", "Choose a pet", petData, function(v)
-    selectedPet = v
+-- Buttons
+Section:NewButton("Refresh Pet List", "Reload pets", function()
+    GetPets()
+    Library:Notify("Pet list updated!", 3)
 end)
 
-Section:NewDropdown("Select Mutation", "Choose mutation type", mutationTypes, function(v)
-    selectedMutation = v
-    Library:Notify("Passive: "..mutationData[v], 5)
-end)
-
-Section:NewButton("Apply Mutation", "Applies selected mutation", function()
-    if selectedPet ~= "None" and selectedMutation ~= "None" then
+Section:NewButton("Apply Mutation", "Apply mutation to pet", function()
+    if selectedPet and selectedMutation then
         local remote = game:GetService("ReplicatedStorage"):FindFirstChild("MutatePet")
         if remote then
             remote:FireServer(selectedPet, selectedMutation)
@@ -78,19 +90,11 @@ Section:NewButton("Apply Mutation", "Applies selected mutation", function()
             Library:Notify("RemoteEvent not found! Use RemoteSpy.", 4)
         end
     else
-        Library:Notify("Select a pet and mutation first!", 4)
+        Library:Notify("Please select a pet and mutation first!", 4)
     end
 end)
 
-Section:NewButton("Refresh Pet List", "Reload pets", function()
-    GetPets()
-    Library:Notify("Pet list refreshed!", 3)
-end)
-
--- Display Mutation Info
-for name, passive in pairs(mutationData) do
-    InfoSection:NewLabel(name.." → "..passive)
+-- Mutation Info Display
+for name, desc in pairs(mutationData) do
+    InfoSection:NewLabel(name.." → "..desc)
 end
-
--- Load initial pets
-GetPets()
